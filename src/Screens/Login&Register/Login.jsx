@@ -3,15 +3,15 @@ import styles from './Style';
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faUser, faLock, faUserPlus } from '@fortawesome/free-solid-svg-icons';
-import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { useNavigation } from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { login } from '../APIS/APIData';
+
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [passwordVerify, setPasswordVerify] = useState('');
+    const [passwordVerify, setPasswordVerify] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const navigation = useNavigation();
 
@@ -20,7 +20,6 @@ const Login = () => {
         setPassword(passwordVar);
         setPasswordVerify(false);
         if (/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}$/.test(passwordVar)) {
-            setPassword(passwordVar);
             setPasswordVerify(true);
         }
     }
@@ -30,27 +29,30 @@ const Login = () => {
     };
 
     const handleLogin = async () => {
-        try {
-          const result = await login(email, password);
-      
-          if (result.success) {
-            // Retrieve user data from AsyncStorage
-            const storedUserInfo = await AsyncStorage.getItem('userInfo');
-            const userData = storedUserInfo ? JSON.parse(storedUserInfo) : {};
-      
-            navigation.navigate('HomeScreen', { userData });
-          } else {
-            Alert.alert('Login Failed', result.message);
-          }
-        } catch (error) {
-          console.error('Error logging in:', error);
-          Alert.alert('Error', 'Failed to login. Please try again.');
+        if (!email || !password) {
+            Alert.alert('Input Required', 'Please enter both email and password.');
+            return;
         }
-      };
-          const handleGuest = () => {
-        navigation.navigate("Guest");
-    }
-
+        
+        try {
+            const result = await login(email, password);
+    
+            if (result.success) {
+                // Retrieve user data from AsyncStorage
+                const storedUserInfo = await AsyncStorage.getItem('userInfo');
+                const userData = storedUserInfo ? JSON.parse(storedUserInfo) : {};
+    
+                navigation.navigate('HomeScreen', { userData });
+            } else {
+                // Show a generic error message or specific message if needed
+                Alert.alert('Login Failed', result.message);
+            }
+        } catch (error) {
+            console.error('Error logging in:', error);
+            Alert.alert('Error', 'Failed to login. Please try again.');
+        }
+    };
+      
     return (
         <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.logoContainer}>
@@ -107,12 +109,6 @@ const Login = () => {
                     </Text>
                 </View>
                 <View style={styles.bottomButton}>
-                    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                        <TouchableOpacity style={styles.inBut2} onPress={handleGuest}>
-                            <FontAwesomeIcon icon={faUser} color='white' style={styles.smallIcon2} />
-                        </TouchableOpacity>
-                        <Text style={styles.bottomText}>Guest</Text>
-                    </View>
                     <View style={{ alignItems: 'center', justifyContent: 'center' }}>
                         <TouchableOpacity style={styles.inBut2} onPress={() => { navigation.navigate("Register"); }}>
                             <FontAwesomeIcon icon={faUserPlus} color='white' style={[styles.smallIcon2, { fontSize: 30 }]} />

@@ -16,7 +16,7 @@ const Header = ({ icon, title, notificationCount, onPressNotification }) => {
       </TouchableOpacity>
       <Text style={styles.title}>{title}</Text>
       <TouchableOpacity onPress={onPressNotification} style={styles.notificationBtn}>
-        <Image source={require('../../../assets/bell.png')} style={styles.notificationIcon} />
+        {/* <Image source={require('../../../assets/bell.png')} style={styles.notificationIcon} /> */}
         {notificationCount > 0 && <View style={styles.notificationBadge}><Text style={styles.badgeText}>{notificationCount}</Text></View>}
       </TouchableOpacity>
     </View>

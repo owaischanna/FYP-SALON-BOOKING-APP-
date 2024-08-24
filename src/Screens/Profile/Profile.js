@@ -85,9 +85,9 @@ const Profile = () => {
         </View>
       )}
 
-      <TouchableOpacity style={styles.profileItem} onPress={() => navigation.navigate('Settings')}>
+      {/* <TouchableOpacity style={styles.profileItem} onPress={() => navigation.navigate('Settings')}>
         <Text style={styles.profileItemText}>Settings</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* <TouchableOpacity style={styles.profileItem} onPress={handleLogout}>
         <Text style={styles.profileItemText}>Logout</Text>

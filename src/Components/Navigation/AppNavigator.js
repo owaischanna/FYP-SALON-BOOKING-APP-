@@ -31,8 +31,8 @@ const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{headerShown: false}}>
         {/* <Stack.Screen name="SplashScreen" component={SplashScreen} /> */}
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="Register" component={Register} /> 
+        {/* <Stack.Screen name="Login" component={Login} /> */}
+        {/* <Stack.Screen name="Register" component={Register} />  */}
         {/* <Stack.Screen name="ForgotPaswordScreen" component={ForgotPaswordScreen}/>
         <Stack.Screen name="NewPaswordScreen" component={NewPaswordScreen}/> */}
         {/* <Stack.Screen name="ConfirmEmailScreen" component={ConfirmEmailScreen}/> */}
@@ -41,8 +41,8 @@ const AppNavigator = () => {
         <Stack.Screen name="Success" component={Success} />
         <Stack.Screen name="Appointments" component={Appointments}/>
         <Stack.Screen name="Profile" component={Profile}/>
-        <Stack.Screen name="Settings" component={Settings} />
-        <Stack.Screen name='Notifications' component={Notifications}/>
+        {/* <Stack.Screen name="Settings" component={Settings} /> */}
+        {/* <Stack.Screen name='Notifications' component={Notifications}/> */}
         {/* <Stack.Screen name='APIData' component={APIData}/> */}
         <Stack.Screen name='ChangePaswordScreen' component={ChangePasswordScreen}/>
         <Stack.Screen name='EditAccountDetailsScreen' component={EditAccountDetailsScreen}/>

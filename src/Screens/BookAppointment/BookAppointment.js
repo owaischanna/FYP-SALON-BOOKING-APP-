@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView,Image, Dimensions,Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -6,33 +5,10 @@ import CustomDropdown from './CustomDropDown';
 import Header from '../../Components/Navigation/Header';
 import{Calendar}from'react-native-calendars';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getAppointments,bookAppointment,getEmployees } from '../APIS/APIData'; // Replace with your API functions
+import { getAppointments,bookAppointment,getEmployees,getServices } from '../APIS/APIData'; // Replace with your API functions
 
  // Replace with your API functions
  const screenWidth = Dimensions.get('window').width;
- const serviceCategories = [
-  {
-    category: 'Hair Services',
-    services: [
-      { name: 'Hair Cutting Services', rate: '$10' },
-      { name: 'Hair Coloring Services', rate: '$15' },
-    ],
-  },
-  {
-    category: 'Makeup Services',
-    services: [
-      { name: 'Makeup Services', rate: '$20' },
-      { name: 'Bridal Makeup', rate: '$50' },
-    ],
-  },
-  {
-    category: 'Nail Services',
-    services: [
-      { name: 'Nail Services', rate: '$8' },
-      { name: 'Manicure', rate: '$12' },
-    ],
-  },
-];
 
 
 const BookAppointment = () => {
@@ -52,19 +28,14 @@ const BookAppointment = () => {
   const [selectedShop, setSelectedShop] = useState(salon || {});
   const [employees, setEmployees] = useState([]);
   const [persistedBookedSlots, setPersistedBookedSlots] = useState({});
+  const [services, setServices] = useState([]);
 
-  const serviceIdMap = {
-    'Hair Cutting Services': 1,
-    'Hair Coloring Services': 2,
-    'Makeup Services': 3,
-    'Bridal Makeup': 4,
-    'Nail Services': 5,
-    'Manicure': 6
-  };
+  
 
   useEffect(() => {
     fetchAppointments();
     fetchEmployees();
+    fetchServicesData();
     retrievePersistedBookedSlots();
   }, []);
 
@@ -88,6 +59,24 @@ const BookAppointment = () => {
     }
   };
 
+  const fetchServicesData = async () => {
+    try {
+      const serviceData = await getServices();
+      // console.log('Fetched Services:', serviceData); // Should log the array of services or an empty array
+
+      if (serviceData && Array.isArray(serviceData)) {
+        setServices(serviceData); // Set state only if the data is an array
+      } else {
+        console.error('No valid services data found');
+      }
+    } catch (error) {
+      console.error('Error in useEffect:', error);
+    }
+  };
+  
+
+
+  
   const fetchEmployees = async () => {
     try {
       const response = await getEmployees();
@@ -133,7 +122,7 @@ const BookAppointment = () => {
   const handleBookAppointment = async () => {
     if (selectedDate && selectedTime && selectedEmployee) {
       const selectedEmployeeId = employees.find(emp => emp.Name === selectedEmployee)?.EmployeeId;
-      const selectedServiceId = serviceIdMap[selectedService];
+      const selectedServiceId = services.find(ser=>ser.Name==selectedService)?.selectedServiceId;
       const shopId = selectedShop.ShopId;
 
       if (!shopId) {
@@ -169,7 +158,7 @@ const BookAppointment = () => {
         ServiceId: selectedServiceId,
         date: formattedDate,
         Time: selectedTime,
-        Price: SelectedServiceRate.replace('$', ''),
+        Price: SelectedServiceRate.replace('PKR', ''),
         UserId: 'currentUserId', // Replace with actual user ID
       };
 
@@ -193,7 +182,7 @@ const BookAppointment = () => {
             selectedDate,
             selectedTime,
             SelectedServiceRate,
-            selectedEmployee
+            selectedEmployee,
           });
         } else {
           Alert.alert('Error', 'Failed to book the appointment. Please try again.');
@@ -281,14 +270,14 @@ const BookAppointment = () => {
       {salon ? (
         <>
           <Image
-            source={{ uri: selectedShop.ImageUrl || 'default_image_url' }} // Ensure default image URL
+            source={require('../../../assets/banner3.jpeg')} // Ensure default image URL
             style={styles.SalonImg}
           />
           <Text style={styles.name}>{salon.Name}</Text>
           <Text style={styles.rating}>Rating {selectedShop.rating || 'N/A'}</Text>
         </>
       ) : (
-        <Text>No salon selected</Text>
+        <Text style={styles.heading}>No salon selected</Text>
       )}
 
       <Text style={styles.heading}>Select Employee</Text>
@@ -346,25 +335,17 @@ const BookAppointment = () => {
 
         <View style={styles.container}>
           <View style={styles.section}>
-            <Text style={styles.heading}>Select Service</Text>
-            {/* Render service selection UI */}
-            <CustomDropdown
-              items={serviceCategories.reduce(
-                (acc, category) => [
-                  ...acc,
-                  ...category.services.map(
-                    service => `${service.name} - ${service.rate}`
-                  ),
-                ],
-                []
-              )}
-              defaultValue="Choose an Option"
-              onSelect={(value) => {
-                const [serviceName, rate] = value.split(" - ");
-                setSelectedService(serviceName);
-                setSelectedServiceRate(rate);
-              }}
-            />
+          <Text style={styles.heading}>Select Service</Text>
+          <CustomDropdown
+  items={services.map(service => `${service.ServiceName} - PKR${service.ServicePrice}`)}
+  defaultValue="Choose an Option"
+  onSelect={(value) => {
+    const [serviceName, rate] = value.split(" - PKR");
+    setSelectedService(serviceName);
+    setSelectedServiceRate(rate);
+  }}
+/>
+
           </View>
 
           <TouchableOpacity style={styles.button} onPress={handleBookAppointment}>

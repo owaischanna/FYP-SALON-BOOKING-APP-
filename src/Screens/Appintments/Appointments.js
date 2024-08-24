@@ -1,33 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import axios from 'axios';
+import { getAppointments, deleteAppointment } from '../APIS/APIData'; // Adjust the path
 import Header from '../../Components/Navigation/Header';
 
 const Appointments = () => {
   const [appointments, setAppointments] = useState([]);
 
   useEffect(() => {
-    // Fetch appointments from the backend
-    const fetchAppointments = async () => {
+    // Fetch appointments when the component mounts
+    const loadAppointments = async () => {
       try {
-        const response = await axios.get('http://167.99.68.31:3000/appointement'); // Update with your actual endpoint
-        setAppointments(response.data);
+        const data = await getAppointments();
+        
+        if (Array.isArray(data)) {
+          setAppointments(data);
+        } else {
+          console.warn('Unexpected data format:', data);
+          // Optionally set appointments to an empty array or handle as needed
+          setAppointments([]);
+        }
       } catch (error) {
-        console.error('Error fetching appointments:', error);
         Alert.alert('Error', 'Failed to fetch appointments. Please try again later.');
       }
     };
-
-    fetchAppointments();
+    loadAppointments();
   }, []);
 
   const handleDelete = async (AppointmentId) => {
     try {
-      await axios.delete(`http://167.99.68.31:3000/appointement/${AppointmentId}`);
+      await deleteAppointment(AppointmentId);
       setAppointments(appointments.filter(appointment => appointment.AppointmentId !== AppointmentId));
       Alert.alert('Success', 'Appointment deleted successfully.');
     } catch (error) {
-      console.error('Error deleting appointment:', error);
       Alert.alert('Error', 'Failed to delete the appointment. Please try again later.');
     }
   };
@@ -47,36 +51,56 @@ const Appointments = () => {
     <View style={styles.container}>
       <Header title={'Appointments'} icon={require('../../../assets/back.png')} showBack={true} />
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        {/* List of Appointments */}
-        <View style={styles.appointmentList}>
-          {appointments.map((appointment, index) => (
-            <View key={appointment.AppointmentId} style={styles.appointmentItem}>
-              <View style={styles.appointmentDetails}>
-                <Text style={styles.appointmentNumber}>#{index + 1}</Text>
-                <Text style={styles.shopName}>Shop: {appointment.shopname || ''}</Text>
-                <Text style={styles.serviceName}>Service: {appointment.service?.name || ''}</Text>
-                <Text style={styles.appointmentTime}>Time: {appointment.Time || ''}</Text>
-                <Text style={styles.appointmentDate}>Date: {appointment.date || ''}</Text>
-                <Text style={styles.appointmentPrice}>Price: ${appointment.Price || ''}</Text>
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDelete(appointment.AppointmentId)}
-                  >
-                    <Text style={styles.deleteButtonText}>Delete</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => handleCancel(appointment.AppointmentId)}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
+        {/* Conditional Rendering for No Appointments */}
+        {appointments.length === 0 ? (
+          <View style={styles.noAppointmentsContainer}>
+            <Text style={styles.noAppointmentsText}>No Appointments are available.</Text>
+          </View>
+        ) : (
+          <View style={styles.appointmentList}>
+            {appointments.map((appointment, index) => (
+              <View key={appointment.AppointmentId} style={styles.appointmentItem}>
+                <View style={styles.appointmentDetails}>
+                  <Text style={styles.appointmentNumber}>Appointment #{index + 1}</Text>
+                  <View style={styles.infoContainer}>
+                    <Text style={styles.salonName}>Shop: {appointment.shop?.Name || 'N/A'}</Text>
+                    {appointment.services && appointment.services.length > 0 ? (
+                      <Text style={styles.serviceName}>Service: {appointment.services[0]?.ServiceName || 'N/A'}</Text>
+                    ) : (
+                      <Text style={styles.serviceName}>Service: N/A</Text>
+                    )}
+                  </View>
+                  <View style={styles.dateTimeContainer}>
+                    <View style={styles.dateTimeBox}>
+                      <Text style={styles.dateTimeLabel}>Date:</Text>
+                      <Text style={styles.dateTimeValue}>{appointment.date || 'N/A'}</Text>
+                    </View>
+                    <View style={styles.dateTimeBox}>
+                      <Text style={styles.dateTimeLabel}>Time:</Text>
+                      <Text style={styles.dateTimeValue}>{appointment.Time || 'N/A'}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.appointmentPrice}>Price: ${appointment.Price || '0.00'}</Text>
+                  <Text style={styles.appointmentEmployee}>Employee: {appointment.employee?.Name || 'N/A'}</Text>
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => handleDelete(appointment.AppointmentId)}
+                    >
+                      <Text style={styles.deleteButtonText}>Delete</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.cancelButton}
+                      onPress={() => handleCancel(appointment.AppointmentId)}
+                    >
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
-            </View>
-          ))}
-        </View>
-       
+            ))}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -85,20 +109,32 @@ const Appointments = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
   contentContainer: {
     flexGrow: 1,
     paddingVertical: 20,
-  },
-  appointmentList: {
     paddingHorizontal: 15,
   },
-  appointmentItem: {
+  noAppointmentsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 50,
+  },
+  noAppointmentsText: {
+    fontSize: 18,
+    color: '#666',
+    textAlign: 'center',
+  },
+  appointmentList: {
     marginBottom: 20,
-    backgroundColor: '#f9f9f9',
+  },
+  appointmentItem: {
+    backgroundColor: '#fff',
     borderRadius: 10,
     padding: 15,
+    marginBottom: 15,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
@@ -106,21 +142,15 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   appointmentNumber: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  appointmentDetails: {
-    padding: 10,
-  },
-  salonName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#420475',
-    marginBottom: 5,
+    color: '#333',
+    marginBottom: 10,
   },
-  shopName: {
+  infoContainer: {
+    marginBottom: 15,
+  },
+  salonName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#420475',
@@ -129,29 +159,46 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 5,
   },
-  appointmentDate: {
-    fontSize: 14,
-    color: '#666',
+  dateTimeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
-  appointmentTime: {
+  dateTimeBox: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#e9ecef',
+    marginHorizontal: 5,
+    alignItems: 'center',
+  },
+  dateTimeLabel: {
     fontSize: 14,
-    color: '#666',
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  dateTimeValue: {
+    fontSize: 14,
+    color: '#555',
   },
   appointmentPrice: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginTop: 5,
+    marginBottom: 10,
+  },
+  appointmentEmployee: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 15,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
   },
   deleteButton: {
-    backgroundColor: '#420475', // Keep the background color as #420475
+    backgroundColor: '#dc3545',
     padding: 10,
     borderRadius: 5,
     flex: 1,
@@ -163,14 +210,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   cancelButton: {
-    backgroundColor: '#f0ad4e',
+    backgroundColor: '#ffc107',
     padding: 10,
     borderRadius: 5,
     flex: 1,
     marginLeft: 5,
   },
   cancelButtonText: {
-    color: '#fff',
+    color: '#000',
     textAlign: 'center',
     fontWeight: 'bold',
   },

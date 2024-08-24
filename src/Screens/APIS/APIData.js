@@ -16,11 +16,9 @@ export const login = async (email, password) => {
       Password: password,
     });
 
-    // Log the response data
     console.log('API response data:', response.data);
 
     const { token, ...userData } = response.data;
-    // console.log('Extracted user data:', userData);
 
     if (token) {
       await AsyncStorage.setItem('authToken', token);
@@ -30,20 +28,40 @@ export const login = async (email, password) => {
       await AsyncStorage.setItem('userInfo', JSON.stringify(userData));
       const savedUserInfo = await AsyncStorage.getItem('userInfo');
       console.log('User info saved in AsyncStorage:', savedUserInfo);
-    } else {
-      // console.error('No user data received to save in AsyncStorage');
     }
 
     return { success: true, data: userData };
   } catch (error) {
     console.error('Login error:', error);
+
     let errorMessage = 'An error occurred during login.';
-    if (error.response && error.response.data) {
-      errorMessage = error.response.data.message || errorMessage;
+
+    if (error.response) {
+      // Handle specific status codes or error response formats
+      switch (error.response.status) {
+        case 400:
+          errorMessage = 'Invalid credentials. Please check your email and password.';
+          break;
+        case 401:
+          errorMessage = 'Unauthorized. Please check your credentials.';
+          break;
+        case 500:
+          errorMessage = 'Server error. Please try again later.';
+          break;
+        default:
+          errorMessage = 'An unexpected error occurred.';
+          break;
+      }
+    } else if (error.request) {
+      errorMessage = 'No response received from the server.';
+    } else {
+      errorMessage = 'Request setup error: ' + error.message;
     }
+
     return { success: false, message: errorMessage };
   }
 };
+
 // Signup API
 export const signup = async (userData) => {
   try {
@@ -86,17 +104,31 @@ export const signup = async (userData) => {
 
 
 
+// Function to delete an appointment
+export const deleteAppointment = async (AppointmentId) => {
+  try {
+    await axios.delete(`${BASE_URL}/appointement/${AppointmentId}`);
+  } catch (error) {
+    console.error('Error deleting appointment:', error);
+    throw error; // Re-throw the error to handle it in the component
+  }
+};
 
 // Fetch appointments API
 export const getAppointments = async () => {
   try {
     const headers = await getAuthHeader();
-    const response = await axios.get(`${BASE_URL}/appointement`, { headers });
-    return response.data;
+    const response = await axios.get(`${BASE_URL}/appointement/get-my-appointments`, { headers });
+    console.log('API Response:', response.data);
+    // Extract the data field which contains the array of appointments
+    return response.data.data; // Correctly return the data field
   } catch (error) {
+    console.error('Error fetching appointments:', error);
     throw error;
   }
 };
+
+
 
 // Book appointment API
 export const bookAppointment = async (appointmentData) => {
@@ -125,9 +157,44 @@ export const fetchShops = async () => {
   }
 };
 
+//fetch categories
+export const fetchCategories = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/category`);
+    
+    // Check if response has data
+    if (response && response.data) {
+      return response.data;
+    } else {
+      throw new Error('No data found');
+    }
+  } catch (error) {
+    console.error('Error fetching categories:', error.message);
+    throw error; // Re-throw the error after logging
+  }
+};
+
 // Add this to your API utility file
 export const getEmployees = async () => {
   const authHeader = await getAuthHeader();
   const response = await axios.get(`${BASE_URL}/employee`, { headers: authHeader });
   return response.data;
 };
+
+//getservices
+export const getServices = async () => {
+  try {
+    const authHeader = await getAuthHeader();
+    const response = await axios.get(`${BASE_URL}/service`, { headers: authHeader });
+    
+    // console.log('Raw API Response:', response); // Log the entire response
+    // console.log('Service Data:', response.data); // Log the data directly
+
+    return response.data; // Return data directly as it is an array
+  } catch (error) {
+    console.error('Error fetching services:', error);
+    return [];
+  }
+};
+
+
